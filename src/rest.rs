@@ -1,6 +1,6 @@
 use std::env;
 use reqwest::Client;
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 use crate::error::Error;
 
 // Constant
@@ -35,10 +35,7 @@ impl RestHandler {
         let client = Client::new();
         let url = format!("{}/{}", self.base_url, endpoint);
 
-        println!("{:?}", url);
-
         let mut req = client.get(url);
-
         if let Some(token) = self.token.as_ref() {
             req = req.header("X-Nomad-Token", token);
         }
@@ -49,6 +46,27 @@ impl RestHandler {
             .await?;
 
         Ok(res)
+    }
+
+    pub async fn post<T: Serialize>(&self, endpoint: &str, payload: T) -> Result<(), Error> {
+        let client = Client::new();
+        let url = format!("{}/{}", self.base_url, endpoint);
+
+        println!("{url}");
+
+        let mut req = client.post(url);
+        if let Some(token) = self.token.as_ref() {
+            req = req.header("X-Nomad-Token", token);
+        }
+
+        let res = req
+            .json(&payload)
+            .send()
+            .await?;
+
+        println!("{:?}", res);
+
+        Ok(())
     }
 }
 

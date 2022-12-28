@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use crate::error::Error;
 use crate::helper;
@@ -56,13 +55,12 @@ impl Job {
 /// # Arguments
 ///
 /// * `handler` - &RestHandler
-pub async fn get_nomad_job_list(handler: &RestHandler) -> Result<HashMap<String, Job>, Error> {
+pub async fn get_nomad_job_list(handler: &RestHandler) -> Result<Vec<Job>, Error> {
     let endpoint = format!("{}?meta=true&namespace=*", JOB_ENDPOINT);
-    let jobs: HashMap<String, Job> = handler.get::<Vec<Job>>(&endpoint)
+    let jobs: Vec<Job> = handler.get::<Vec<Job>>(&endpoint)
         .await?
         .into_iter()
         .filter(|j| j.parameterized)
-        .map(|j| (j.name.clone(), j))
         .collect();
 
     Ok(jobs)

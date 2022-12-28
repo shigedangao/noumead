@@ -7,6 +7,7 @@ pub enum Error {
     MissingEnv(String),
     NomadReqErr(String),
     Serialize(String),
+    Dispatch,
     ScenarioFinished
 }
 
@@ -16,6 +17,7 @@ impl std::fmt::Display for Error {
             Error::MissingEnv(msg) => write!(f, "Unable to find environment variable due to: {msg}"),
             Error::NomadReqErr(msg) => write!(f, "Nomad returns an error: {msg}"),
             Error::Serialize(msg) => write!(f, "Error while serializing data: {msg}"),
+            Error::Dispatch => write!(f, "Job dispatching has fail"),
             Error::ScenarioFinished => write!(f, "No option selected. Terminating the program")
         }
     }

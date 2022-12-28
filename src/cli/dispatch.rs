@@ -1,48 +1,20 @@
 use std::collections::HashMap;
+use clap::Args;
+use async_trait::async_trait;
+use crate::{nomad, inquiry, error::Error};
+use super::Run;
 
-use clap::Parser;
-use crate::error::Error;
-use crate::rest::RestHandler;
-use crate::nomad;
-use crate::inquiry;
 
-#[derive(Parser, Debug)]
-#[command(author, version, about)]
-struct Args {
+#[derive(Args, Debug)]
+pub struct DispatchArgs {
     #[arg(short, long)]
     follow: bool,
-
-    #[arg(short, long)]
-    nomad_url: Option<String>,
-
-    #[arg(short, long)]
-    token: Option<String>
 }
 
-#[derive(Debug)]
-pub struct Cli {
-    args: Args
-}
-
-impl Cli {
-    /// Create a new cli by parsing the arguments
-    pub fn new() -> Cli {
-        let args = Args::parse();
-
-        Cli { args }
-    }
-
-    /// Run the CLI with the provided arguments
-    ///
-    /// # Arguments
-    /// * `&self` - Cli
-    pub async fn run(&self) -> Result<(), Error> {
-        let rest_handler = RestHandler::new(
-            self.args.nomad_url.to_owned(),
-            self.args.token.to_owned()
-        )?;
-
-        let jobs = nomad::job::get_nomad_job_list(&rest_handler).await?;
+#[async_trait]
+impl Run for DispatchArgs {
+    async fn run(&self, cli: &super::Cli) -> Result<(), crate::error::Error> {
+        let jobs = nomad::job::get_nomad_job_list(&cli.rest_handler).await?;
         let jobs_name: Vec<&str> = jobs.keys()
             .map(|k| k.as_str())
             .collect();
@@ -57,7 +29,7 @@ impl Cli {
         }
 
         let job = selected_job.unwrap();
-        let (required, optionals) = job.get_job_meta(&rest_handler).await?;
+        let (required, optionals) = job.get_job_meta(&cli.rest_handler).await?;
 
         let mut required_value = match required {
             Some(metas) => inquiry::prompt_vector(metas, "Input the required value for")?,
@@ -73,7 +45,7 @@ impl Cli {
         required_value.extend(optional_value.into_iter());
 
         // dispatch the job
-        job.dispatch_job(&rest_handler, required_value).await?;
+        job.dispatch_job(&cli.rest_handler, required_value).await?;
 
         Ok(())
     }

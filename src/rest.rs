@@ -6,7 +6,7 @@ use crate::error::Error;
 // Constant
 const NOMAD_ADDR_ENV: &str = "NOMAD_ADDR";
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct RestHandler {
     base_url: String,
     token: Option<String>
@@ -31,6 +31,12 @@ impl RestHandler {
         })
     }
 
+    /// Prepare and send a get request to the nomad api
+    ///
+    /// # Arguments
+    ///
+    /// * `&self` - RestHandler
+    /// * `endpoint` - &str
     pub async fn get<T: DeserializeOwned>(&self, endpoint: &str) -> Result<T, Error> {
         let client = Client::new();
         let url = format!("{}/{}", self.base_url, endpoint);
@@ -48,11 +54,16 @@ impl RestHandler {
         Ok(res)
     }
 
+    /// Prepare and send a post request to the nomad api
+    ///
+    /// # Arguments
+    ///
+    /// * `&self` - RestHandler
+    /// * `endpoint` - &str
+    /// * `payload` - T
     pub async fn post<T: Serialize>(&self, endpoint: &str, payload: T) -> Result<(), Error> {
         let client = Client::new();
         let url = format!("{}/{}", self.base_url, endpoint);
-
-        println!("{url}");
 
         let mut req = client.post(url);
         if let Some(token) = self.token.as_ref() {
@@ -64,7 +75,9 @@ impl RestHandler {
             .send()
             .await?;
 
-        println!("{:?}", res);
+        if res.status() != 200 {
+            return Err(Error::Dispatch);
+        }
 
         Ok(())
     }

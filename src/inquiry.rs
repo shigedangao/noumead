@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-
 use inquire::{Select, Text};
 use crate::error::Error;
 

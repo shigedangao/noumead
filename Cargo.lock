@@ -547,6 +547,7 @@ dependencies = [
  "async-trait",
  "base64 0.20.0",
  "clap",
+ "crossterm",
  "inquire",
  "reqwest",
  "serde",

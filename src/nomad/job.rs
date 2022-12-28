@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use crossterm::style::Stylize;
 use crate::error::Error;
 use crate::helper;
 use crate::rest::RestHandler;
@@ -62,7 +63,7 @@ impl Job {
 
         // send the dispatch to nomad
         let res: DispatchRes = handler.post(&endpoint, payload).await?;
-        println!("Job dispatch with name {}", res.dispatch_id);
+        println!("{}{}", "Job dispatch with name: ".green(), res.dispatch_id.bold());
 
         Ok(())
     }

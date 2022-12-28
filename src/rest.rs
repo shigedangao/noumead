@@ -61,7 +61,7 @@ impl RestHandler {
     /// * `&self` - RestHandler
     /// * `endpoint` - &str
     /// * `payload` - T
-    pub async fn post<T: Serialize>(&self, endpoint: &str, payload: T) -> Result<(), Error> {
+    pub async fn post<T: Serialize, O: DeserializeOwned>(&self, endpoint: &str, payload: T) -> Result<O, Error> {
         let client = Client::new();
         let url = format!("{}/{}", self.base_url, endpoint);
 
@@ -79,7 +79,9 @@ impl RestHandler {
             return Err(Error::Dispatch);
         }
 
-        Ok(())
+        let output = res.json::<O>().await?;
+
+        Ok(output)
     }
 }
 

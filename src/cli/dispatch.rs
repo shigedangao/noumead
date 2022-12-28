@@ -4,6 +4,8 @@ use async_trait::async_trait;
 use crate::{nomad, inquiry, error::Error};
 use super::Run;
 
+// constant
+const SELECTED_JOB_NOT_FOUND: &str = "Unable to found the selected job";
 
 #[derive(Args, Debug)]
 pub struct DispatchArgs {
@@ -15,20 +17,12 @@ pub struct DispatchArgs {
 impl Run for DispatchArgs {
     async fn run(&self, cli: &super::Cli) -> Result<(), crate::error::Error> {
         let jobs = nomad::job::get_nomad_job_list(&cli.rest_handler).await?;
-        let jobs_name: Vec<&str> = jobs.keys()
-            .map(|k| k.as_str())
-            .collect();
+        let (_, idx) = inquiry::select(&jobs, "Select the job that you want to dispatch")?;
 
-        let selected_job_name = inquiry::select(jobs_name, "Select the job that you want to dispatch")?;
+        let Some(job) = jobs.get(idx) else {
+            return Err(Error::ScenarioErr(SELECTED_JOB_NOT_FOUND.to_string()));
+        };
 
-        // get the selected job
-        let selected_job = jobs.get(&selected_job_name);
-        // @TODO change error
-        if selected_job.is_none() {
-            return Err(Error::ScenarioFinished);
-        }
-
-        let job = selected_job.unwrap();
         let (required, optionals) = job.get_job_meta(&cli.rest_handler).await?;
 
         let mut required_value = match required {

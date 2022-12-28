@@ -8,7 +8,8 @@ pub enum Error {
     NomadReqErr(String),
     Serialize(String),
     Dispatch,
-    ScenarioFinished
+    ScenarioFinished,
+    ScenarioErr(String)
 }
 
 impl std::fmt::Display for Error {
@@ -18,7 +19,8 @@ impl std::fmt::Display for Error {
             Error::NomadReqErr(msg) => write!(f, "Nomad returns an error: {msg}"),
             Error::Serialize(msg) => write!(f, "Error while serializing data: {msg}"),
             Error::Dispatch => write!(f, "Job dispatching has fail"),
-            Error::ScenarioFinished => write!(f, "No option selected. Terminating the program")
+            Error::ScenarioFinished => write!(f, "No option selected. Terminating the program"),
+            Error::ScenarioErr(msg) => write!(f, "An error occurred while {msg}")
         }
     }
 }

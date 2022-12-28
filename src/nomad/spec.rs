@@ -19,14 +19,14 @@ pub(crate) struct Parameterized {
 }
 
 impl Spec {
-    /// Read the spec of the selected job
+    /// Get the spec of the selected job
     ///
     /// # Arguments
     ///
     /// * `name` - &str
     /// * `base_url` - &str
     /// * `handler` - &RestHandler
-    pub async fn read(name: &str, handler: &RestHandler) -> Result<Spec, Error> {
+    pub async fn get(name: &str, handler: &RestHandler) -> Result<Spec, Error> {
         let endpoint = format!("{}/{}", SPEC_ENDPOINT, name);
         let spec = handler.get::<Spec>(&endpoint).await?;
 

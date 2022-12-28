@@ -2,11 +2,25 @@ use std::collections::HashMap;
 use inquire::{Select, Text};
 use crate::error::Error;
 
-pub fn select(args: Vec<&str>, question: &str) -> Result<String, Error> {
-    let res = Select::new(question, args)
+// constant
+const SELECTED_ITEM_NOT_FOUND: &str = "Unable to found the selected item";
+
+pub trait ItemName {
+    fn get_name(&self) -> &str;
+}
+
+pub fn select<T: ItemName>(args: &Vec<T>, question: &str) -> Result<(String, usize), Error> {
+    let items: Vec<&str> = args.iter()
+        .map(|i| i.get_name())
+        .collect();
+
+    let res = Select::new(question, items.clone())
         .prompt()?;
 
-    Ok(res.to_owned())
+    let idx = items.binary_search(&res)
+        .map_err(|_| Error::ScenarioErr(SELECTED_ITEM_NOT_FOUND.to_string()))?;
+
+    Ok((res.to_owned(), idx))
 }
 
 pub fn prompt_vector(items: Vec<String>, msg: &str) -> Result<HashMap<String, String>, Error> {

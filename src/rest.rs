@@ -1,10 +1,14 @@
 use std::env;
-use reqwest::Client;
+use reqwest::{Client, RequestBuilder};
+use tokio::time::{sleep, Duration};
 use serde::{de::DeserializeOwned, Serialize};
 use crate::error::Error;
 
 // Constant
 const NOMAD_ADDR_ENV: &str = "NOMAD_ADDR";
+const RETRY_LINEAR_SLEEP: u64 = 1000;
+const MAX_RETRY: usize = 8;
+const REQ_BUILD_FAIL_ERR: &str = "Failed to build request";
 
 #[derive(Debug, Default)]
 pub struct RestHandler {
@@ -46,10 +50,7 @@ impl RestHandler {
             req = req.header("X-Nomad-Token", token);
         }
 
-        let res = req.send()
-            .await?
-            .json::<T>()
-            .await?;
+        let res = retry(req, MAX_RETRY).await?;
 
         Ok(res)
     }
@@ -85,3 +86,46 @@ impl RestHandler {
     }
 }
 
+/// Retry an http request. Due to the fact that the nomad endpoint might returns nothing
+/// or a null json value as something might not be available yet, we need to retry some request for some time.
+/// So far, the implementation is based on a linear retry. Should it be not enough it'd be better to implement
+/// an exponential backoff
+///
+/// # Arguments
+///
+/// * `req` - ReqBuilder
+/// * `max_retry` - usize
+async fn retry<T: DeserializeOwned>(req: RequestBuilder, max_retry: usize) -> Result<T, Error> {
+    for idx in 1..max_retry {
+        let Some(req) = req.try_clone() else {
+            return Err(Error::NomadReqErr(REQ_BUILD_FAIL_ERR.to_string()));
+        };
+
+        let req_res = req.send().await;
+        if let Err(err) = req_res {
+            if idx < MAX_RETRY - 1 {
+                sleep(Duration::from_millis(RETRY_LINEAR_SLEEP)).await;
+                continue
+            }
+
+            // Otherwise return an error
+            return Err(Error::from(err));
+        }
+
+        // try to parse the output data
+        let data = req_res.unwrap().json::<T>().await;
+        if let Ok(d) = data {
+            return Ok(d);
+        }
+
+        if idx < MAX_RETRY - 1 {
+            sleep(Duration::from_millis(RETRY_LINEAR_SLEEP)).await;
+            continue
+        }
+
+        // Otherwise return an error
+        return Err(Error::MaxRetry);
+    }
+
+    return Err(Error::MaxRetry)
+}

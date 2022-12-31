@@ -1,5 +1,4 @@
-use serde::{Serialize};
-use base64;
+use serde::Serialize;
 use crate::error::Error;
 
 /// Convert a struct to a stringify json value
@@ -23,7 +22,7 @@ pub trait Base64 {
 
 impl Base64 for String {
     fn to_base64(&self) -> Self {
-        base64::encode(&self)
+        base64::encode(self)
     }
 
     fn from_base64(b64: String) -> Result<Self, Box<dyn std::error::Error>> {

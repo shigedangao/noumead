@@ -10,10 +10,10 @@ const MISSING_REQUIRED_FIELD_ERR: &str = "You must fill this field as the value 
 ///
 /// # Arguments
 ///
-/// * `args` - &Vec<T: ToString>
+/// * `args` - &[T: ToString]
 /// * `question` - &str
-pub fn select<T: ToString>(args: &Vec<T>, question: &str) -> Result<(String, usize), Error> {
-    let items: Vec<String> = args.into_iter()
+pub fn select<T: ToString>(args: &[T], question: &str) -> Result<(String, usize), Error> {
+    let items: Vec<String> = args.iter()
         .map(|i| i.to_string())
         .collect();
 
@@ -23,7 +23,7 @@ pub fn select<T: ToString>(args: &Vec<T>, question: &str) -> Result<(String, usi
     let idx = items.binary_search(&res)
         .map_err(|_| Error::ScenarioErr(SELECTED_ITEM_NOT_FOUND_ERR.to_string()))?;
 
-    Ok((res.to_owned(), idx))
+    Ok((res, idx))
 }
 
 /// Show a prompt from multiple options the user need may (or not) answer

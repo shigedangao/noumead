@@ -125,5 +125,5 @@ async fn retry<T: DeserializeOwned>(req: RequestBuilder, max_retry: usize) -> Re
         return Err(Error::MaxRetry);
     }
 
-    return Err(Error::MaxRetry)
+    Err(Error::MaxRetry)
 }

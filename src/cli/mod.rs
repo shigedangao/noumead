@@ -79,7 +79,7 @@ impl Cli {
     /// * `&self` - Cli
     pub async fn run(&self) -> Result<(), Error> {
         match &self.args.command {
-            Commands::Dispatch(args) => args.run(&self).await
+            Commands::Dispatch(args) => args.run(self).await
         }
     }
 }

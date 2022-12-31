@@ -79,7 +79,7 @@ impl Allocation {
             }
 
             // call the fetch endpoint again to get the update status of the allocation
-            let alloc = Allocation::fetch(&self.job_id, &rest_handler).await?;
+            let alloc = Allocation::fetch(&self.job_id, rest_handler).await?;
 
             // call the allocation endpoint to check whether the task has finish
             let Some(task) = alloc.task_states.get(task_name) else {
@@ -103,8 +103,7 @@ impl Allocation {
     /// * `&self` - Allocation
     pub fn get_tasks_name(&self) -> Vec<&String> {
         let v = self.task_states.keys();
-        let tasks = Vec::from_iter(v);
 
-        tasks
+        Vec::from_iter(v)
     }
 }

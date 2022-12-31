@@ -1,4 +1,4 @@
-job "example" {
+job "test" {
   type = "batch"
 
   datacenters = ["dc1"]
@@ -6,6 +6,7 @@ job "example" {
   parameterized {
     payload = "required"
     meta_required = ["count", "name"]
+    meta_optional = ["bar"]
   }
 
   group "hello" {
@@ -19,14 +20,17 @@ job "example" {
 
         args = [
           "echo",
-          "hello ${counter}",
-          "${name}"
+          "${counter}",
+          "${name}",
+          "optional",
+          "${bar}"
         ]
       }
 
       env {
         counter = "${NOMAD_META_COUNT}"
         name = "${NOMAD_META_NAME}" 
+        bar  = "${NOMAD_META_BAR}"
       }
     }
   }

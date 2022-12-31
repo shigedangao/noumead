@@ -1,26 +1,17 @@
 use std::collections::HashMap;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use crossterm::style::Stylize;
 use crate::error::Error;
-use crate::helper;
+use crate::helper::{to_json, Base64};
 use crate::rest::RestHandler;
-use crate::inquiry::ItemName;
 use super::spec::Spec;
-use super::dispatch::DispatchRes;
+use super::dispatch::{DispatchRes, DispatchPayload};
 
 // Constant
 const JOB_ENDPOINT: &str = "v1/jobs";
 const JOBS_NOT_FOUND_ERR: &str = "No jobs with parameterized options has been founded";
 
-#[derive(Serialize)]
-struct DispatchPayload {
-    #[serde(rename(serialize = "Payload"))]
-    payload: String,
-    #[serde(rename(serialize = "Meta"))]
-    metas: HashMap<String, String>
-}
-
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 pub struct Job {
     #[serde(rename(deserialize = "ID"))]
     id: String,
@@ -52,26 +43,26 @@ impl Job {
     /// * `&self` - &Job
     /// * `handler` - &RestHandler
     /// * `metas` - HashMap<String, String>
-    pub async fn dispatch_job(&self, handler: &RestHandler, metas: HashMap<String, String>) -> Result<(), Error> {
+    pub async fn dispatch_job(&self, handler: &RestHandler, metas: HashMap<String, String>) -> Result<DispatchRes, Error> {
         let endpoint = format!("v1/job/{}/dispatch", self.id);
 
         // transform the hashmap into a json in order to convert it to a base64
-        let map_json = helper::to_json(&metas)?;
-        let payload = helper::to_base64(map_json);
+        let map_json = to_json(&metas)?;
+        let payload = map_json.to_base64();
 
         let payload = DispatchPayload { payload, metas };
 
         // send the dispatch to nomad
         let res: DispatchRes = handler.post(&endpoint, payload).await?;
-        println!("{}{}", "Job dispatch with name: ".green(), res.dispatch_id.bold());
+        println!("{}{}", "Job dispatch with name: ".green(), res.dispatch_id.clone().bold());
 
-        Ok(())
+        Ok(res)
     }
 }
 
-impl ItemName for Job {
-    fn get_name(&self) -> &str {
-        &self.name
+impl ToString for Job {
+    fn to_string(&self) -> String {
+        self.name.to_owned()
     }
 }
 

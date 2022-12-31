@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use clap::Args;
+use crossterm::style::Stylize;
 use async_trait::async_trait;
 use crate::{nomad, inquiry, error::Error};
 use super::Run;
@@ -26,12 +27,12 @@ impl Run for DispatchArgs {
         let (required, optionals) = job.get_job_meta(&cli.rest_handler).await?;
 
         let mut required_value = match required {
-            Some(metas) => inquiry::prompt_vector(metas, "Input the required value for")?,
+            Some(metas) => inquiry::prompt_vector(metas, "Input the required value for", true)?,
             None => HashMap::new()
         };
 
         let optional_value = match optionals {
-            Some(metas) => inquiry::prompt_vector(metas, "Input value for optional")?,
+            Some(metas) => inquiry::prompt_vector(metas, "Input value for optional", false)?,
             None => HashMap::new()
         };
 
@@ -39,7 +40,23 @@ impl Run for DispatchArgs {
         required_value.extend(optional_value.into_iter());
 
         // dispatch the job
-        job.dispatch_job(&cli.rest_handler, required_value).await?;
+        let dispatch_res = job.dispatch_job(&cli.rest_handler, required_value).await?;
+        // follow the log of the job dispatch
+        if self.follow {
+            let allocs = nomad::alloc::Allocation::fetch(&dispatch_res.dispatch_id, &cli.rest_handler).await?;
+            let tasks_name = allocs.get_tasks_name();
+
+            // ask for the list of task to choose
+            let (selected_task, _) = inquiry::select(&tasks_name, "Select the task to log")?;
+            // get the logs for the targeted allocations
+            allocs.get_allocation_logs(&selected_task, &cli.rest_handler).await?;
+
+            println!("{}", "Dispatching done".green());
+
+            return Ok(());
+        }
+
+        println!("{}", "Dispatching done".green());
 
         Ok(())
     }

@@ -25,3 +25,17 @@ You can pass the nomad server address & token with this command
 ```sh
 cargo run -- --nomad-url="<url>" --token="<token>" dispatch --follow
 ```
+
+### Example
+
+Below is an example of the output of Noumead
+
+```sh
+> Select the job that you want to dispatch busybox
+> Input the required value for: word foo
+Job dispatch with name: busybox/dispatch-1672492297-12e99aa9
+> Select the task to log test
+foo
+foo lala
+Dispatching done
+```

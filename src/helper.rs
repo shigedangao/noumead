@@ -2,6 +2,11 @@ use serde::{Serialize};
 use base64;
 use crate::error::Error;
 
+/// Convert a struct to a stringify json value
+///
+/// # Arguments
+///
+/// * `arg` - T
 pub fn to_json<T: Serialize>(arg: T) -> Result<String, Error> {
     let res = serde_json::to_string(&arg)
         .map_err(|err| Error::Serialize(err.to_string()))?;

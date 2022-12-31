@@ -22,7 +22,7 @@ impl std::fmt::Display for Error {
             Error::Serialize(msg) => write!(f, "Error while serializing data: {msg}"),
             Error::Dispatch => write!(f, "Job dispatching has fail"),
             Error::ScenarioFinished => write!(f, "No option selected. Terminating the program"),
-            Error::ScenarioErr(msg) => write!(f, "An error occurred while {msg}"),
+            Error::ScenarioErr(msg) => write!(f, "The command has stopped due to: {msg}"),
             Error::MissingTask => write!(f, "The selected task could not be found"),
             Error::MaxRetry => write!(f, "Max retry has been achieved when fetching data")
         }

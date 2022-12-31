@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use serde::{Deserialize};
+use serde::Deserialize;
 use crossterm::style::Stylize;
 use crate::error::Error;
 use crate::helper::{to_json, Base64};

@@ -1,9 +1,14 @@
+use std::env;
 use clap::{Parser, Subcommand};
 use async_trait::async_trait;
 use crate::error::Error;
 use crate::rest::RestHandler;
 
 mod dispatch;
+
+// constant
+const NOMAD_ADDR_ENV: &str = "NOMAD_ADDR";
+const NOMAD_TOKEN_ENV: &str = "NOMAD_TOKEN";
 
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
@@ -43,7 +48,8 @@ trait Run {
 impl Cli {
     /// Create a new cli by parsing the arguments
     pub fn new() -> Cli {
-        let args = Args::parse();
+        let mut args = Args::parse();
+        args.fill_optional_values();
 
         Cli {
             args,
@@ -74,6 +80,27 @@ impl Cli {
     pub async fn run(&self) -> Result<(), Error> {
         match &self.args.command {
             Commands::Dispatch(args) => args.run(&self).await
+        }
+    }
+}
+
+impl Args {
+    /// Try to fill the optional value by looking at the environment variable
+    ///
+    /// # Arguments
+    ///
+    /// * `&mut self` - Args
+    fn fill_optional_values(&mut self) {
+        if self.nomad_url.is_none() {
+            if let Ok(url) = env::var(NOMAD_ADDR_ENV) {
+                self.nomad_url = Some(url);
+            }
+        }
+
+        if self.token.is_none() {
+            if let Ok(token) = env::var(NOMAD_TOKEN_ENV) {
+                self.token = Some(token);
+            }
         }
     }
 }

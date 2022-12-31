@@ -27,12 +27,12 @@ impl Run for DispatchArgs {
         let (required, optionals) = job.get_job_meta(&cli.rest_handler).await?;
 
         let mut required_value = match required {
-            Some(metas) => inquiry::prompt_vector(metas, "Input the required value for")?,
+            Some(metas) => inquiry::prompt_vector(metas, "Input the required value for", true)?,
             None => HashMap::new()
         };
 
         let optional_value = match optionals {
-            Some(metas) => inquiry::prompt_vector(metas, "Input value for optional")?,
+            Some(metas) => inquiry::prompt_vector(metas, "Input value for optional", false)?,
             None => HashMap::new()
         };
 

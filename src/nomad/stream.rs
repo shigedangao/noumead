@@ -1,5 +1,4 @@
 use std::io::stdout;
-
 use crossterm::execute;
 use crossterm::style::{Color, SetForegroundColor, Print};
 use serde::Deserialize;

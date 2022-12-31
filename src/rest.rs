@@ -1,14 +1,13 @@
-use std::env;
 use reqwest::{Client, RequestBuilder};
 use tokio::time::{sleep, Duration};
 use serde::{de::DeserializeOwned, Serialize};
 use crate::error::Error;
 
 // Constant
-const NOMAD_ADDR_ENV: &str = "NOMAD_ADDR";
 const RETRY_LINEAR_SLEEP: u64 = 1000;
 const MAX_RETRY: usize = 8;
 const REQ_BUILD_FAIL_ERR: &str = "Failed to build request";
+const MISSING_BASE_URL_ERR: &str = "Failed to get the url of the nomad server";
 
 #[derive(Debug, Default)]
 pub struct RestHandler {
@@ -24,9 +23,8 @@ impl RestHandler {
     /// * `base_url` - String
     /// * `token` - Option<String>
     pub fn new(base_url: Option<String>, token: Option<String>) -> Result<RestHandler, Error> {
-        let url = match base_url {
-            Some(u) => u,
-            None => env::var(NOMAD_ADDR_ENV)?
+        let Some(url) = base_url else {
+            return Err(Error::MissingEnv(MISSING_BASE_URL_ERR.to_string()))
         };
 
         Ok(RestHandler {

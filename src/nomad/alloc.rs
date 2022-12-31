@@ -51,7 +51,7 @@ impl Allocation {
     ///
     /// # Arguments
     ///
-    /// * `self` - Self
+    /// * `self` - Allocation
     /// * `task_name` - &str
     /// * `rest_handler` - &RestHandler
     pub async fn get_allocation_logs(self, task_name: &str, rest_handler: &RestHandler) -> Result<(), Error> {
@@ -97,6 +97,10 @@ impl Allocation {
 
     /// A nomad job can contains multiple task (aka container in Kubernetes world)
     /// as such if we want to log we need to get the list of available task name.
+    ///
+    /// # Arguments
+    ///
+    /// * `&self` - Allocation
     pub fn get_tasks_name(&self) -> Vec<&String> {
         let v = self.task_states.keys();
         let tasks = Vec::from_iter(v);

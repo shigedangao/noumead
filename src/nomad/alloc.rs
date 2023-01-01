@@ -34,17 +34,26 @@ impl Allocation {
     ///
     /// * `job_id` - &str
     /// * `rest_handler` - &RestHandler
-    pub async fn fetch(job_id: &str, rest_handler: &RestHandler) -> Result<Allocation, Error> {
+    pub async fn fetch(job_id: &str, rest_handler: &RestHandler) -> Result<Vec<Allocation>, Error> {
         let endpoint = format!("v1/job/{}/allocations", job_id);
-        let mut allocs: Vec<Allocation> = rest_handler.get(&endpoint).await?;
+        let allocs: Vec<Allocation> = rest_handler.get(&endpoint).await?;
 
-        // for dispatched job there's one allocation per dispatch...
-        let alloc = allocs.pop();
-        if let Some(al) = alloc {
-            return Ok(al);
-        }
+        Ok(allocs)
+    }
 
-        Err(Error::ScenarioErr(MISSING_ALLOCATION.to_string()))
+    /// Fetch a single allocation
+    ///
+    /// # Arguments
+    ///
+    /// * `job_id` - &str
+    /// * `rest_handler` - &RestHandler
+    pub async fn fetch_single_alloc(job_id: &str, rest_handler: &RestHandler) -> Result<Allocation, Error> {
+        let mut allocs = Allocation::fetch(job_id, rest_handler).await?;
+        let Some(alloc) = allocs.pop() else {
+            return Err(Error::ScenarioErr(MISSING_ALLOCATION.to_string()));
+        };
+
+        Ok(alloc)
     }
 
     /// Get the allocation logs by calling the nomad endpoint repetitively until the allocation finish to run
@@ -79,8 +88,7 @@ impl Allocation {
             }
 
             // call the fetch endpoint again to get the update status of the allocation
-            let alloc = Allocation::fetch(&self.job_id, rest_handler).await?;
-
+            let alloc = Allocation::fetch_single_alloc(&self.job_id, rest_handler).await?;
             // call the allocation endpoint to check whether the task has finish
             let Some(task) = alloc.task_states.get(task_name) else {
                 return Err(Error::MissingTask);

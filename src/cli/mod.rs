@@ -5,6 +5,7 @@ use crate::error::Error;
 use crate::rest::RestHandler;
 
 mod dispatch;
+mod stop;
 
 // constant
 const NOMAD_ADDR_ENV: &str = "NOMAD_ADDR";
@@ -25,7 +26,8 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    Dispatch(dispatch::DispatchArgs)
+    Dispatch(dispatch::DispatchArgs),
+    Stop(stop::StopArgs)
 }
 
 #[derive(Debug)]
@@ -79,7 +81,8 @@ impl Cli {
     /// * `&self` - Cli
     pub async fn run(&self) -> Result<(), Error> {
         match &self.args.command {
-            Commands::Dispatch(args) => args.run(self).await
+            Commands::Dispatch(args) => args.run(self).await,
+            Commands::Stop(args) => args.run(self).await
         }
     }
 }

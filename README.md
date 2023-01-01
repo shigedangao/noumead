@@ -39,3 +39,11 @@ foo
 foo lala
 Dispatching done
 ```
+
+### Stop a job
+
+Sometimes I also dispatch jobs with wrong parameters. As such it's also handy to delete multiple job with a single command line
+
+```sh
+cargo run -- --nomad-url="http://127.0.0.1:4646" stop
+```

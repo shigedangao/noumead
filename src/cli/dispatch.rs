@@ -2,7 +2,11 @@ use std::collections::HashMap;
 use clap::Args;
 use crossterm::style::Stylize;
 use async_trait::async_trait;
-use crate::{nomad, inquiry, error::Error};
+use crate::{
+    inquiry,
+    error::Error
+};
+use crate::nomad::{self, job::Job};
 use super::Run;
 
 // constant
@@ -17,7 +21,13 @@ pub struct DispatchArgs {
 #[async_trait]
 impl Run for DispatchArgs {
     async fn run(&self, cli: &super::Cli) -> Result<(), crate::error::Error> {
-        let jobs = nomad::job::get_nomad_job_list(&cli.rest_handler).await?;
+        // filter the job to only get the parameterized job
+        let jobs: Vec<Job> = nomad::job::get_nomad_job_list(&cli.rest_handler)
+            .await?
+            .into_iter()
+            .filter(|j| j.parameterized)
+            .collect();
+
         let (_, idx) = inquiry::select(&jobs, "Select the job that you want to dispatch")?;
 
         let Some(job) = jobs.get(idx) else {
@@ -43,13 +53,13 @@ impl Run for DispatchArgs {
         let dispatch_res = job.dispatch_job(&cli.rest_handler, required_value).await?;
         // follow the log of the job dispatch
         if self.follow {
-            let allocs = nomad::alloc::Allocation::fetch(&dispatch_res.dispatch_id, &cli.rest_handler).await?;
-            let tasks_name = allocs.get_tasks_name();
+            let alloc = nomad::alloc::Allocation::fetch_single_alloc(&dispatch_res.dispatch_id, &cli.rest_handler).await?;
+            let tasks_name = alloc.get_tasks_name();
 
             // ask for the list of task to choose
             let (selected_task, _) = inquiry::select(&tasks_name, "Select the task to log")?;
             // get the logs for the targeted allocations
-            allocs.get_allocation_logs(&selected_task, &cli.rest_handler).await?;
+            alloc.get_allocation_logs(&selected_task, &cli.rest_handler).await?;
 
             println!("{}", "Dispatching done".green());
 

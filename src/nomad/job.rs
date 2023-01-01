@@ -14,13 +14,16 @@ const JOBS_NOT_FOUND_ERR: &str = "No jobs with parameterized options has been fo
 #[derive(Debug, Deserialize, Default)]
 pub struct Job {
     #[serde(rename(deserialize = "ID"))]
-    id: String,
+    pub id: String,
 
     #[serde(rename(deserialize = "Name"))]
-    name: String,
+    pub name: String,
 
     #[serde(rename(deserialize = "ParameterizedJob"))]
-    parameterized: bool
+    pub parameterized: bool,
+
+    #[serde(rename(deserialize = "Status"))]
+    pub status: String
 }
 
 impl Job {
@@ -76,7 +79,6 @@ pub async fn get_nomad_job_list(handler: &RestHandler) -> Result<Vec<Job>, Error
     let jobs: Vec<Job> = handler.get::<Vec<Job>>(&endpoint)
         .await?
         .into_iter()
-        .filter(|j| j.parameterized)
         .collect();
 
     if jobs.is_empty() {

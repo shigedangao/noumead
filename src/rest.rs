@@ -53,6 +53,29 @@ impl RestHandler {
         Ok(res)
     }
 
+    /// Send a delete request to the targeted endpoint
+    ///
+    /// # Arguments
+    ///
+    /// * `&self` - RestHandler
+    /// * `endpoint` - S
+    pub async fn delete<S>(&self, endpoint: S) -> Result<(), Error>
+        where
+            S: AsRef<str> + std::fmt::Display
+    {
+        let client = Client::new();
+        let url = format!("{}/{}", self.base_url, endpoint);
+
+        let mut req = client.delete(url);
+        if let Some(token) = self.token.as_ref() {
+            req = req.header("X-Nomad-Token", token);
+        }
+
+        req.send().await?;
+
+        Ok(())
+    }
+
     /// Prepare and send a post request to the nomad api
     ///
     /// # Arguments
@@ -99,30 +122,30 @@ async fn retry<T: DeserializeOwned>(req: RequestBuilder, max_retry: usize) -> Re
             return Err(Error::NomadReqErr(REQ_BUILD_FAIL_ERR.to_string()));
         };
 
-        let req_res = req.send().await;
-        if let Err(err) = req_res {
-            if idx < MAX_RETRY - 1 {
-                sleep(Duration::from_millis(RETRY_LINEAR_SLEEP)).await;
-                continue
-            }
+        let res = match req.send().await {
+            Ok(r) => r,
+            Err(err) => {
+                if idx < MAX_RETRY - 1 {
+                    sleep(Duration::from_millis(RETRY_LINEAR_SLEEP)).await;
+                    continue
+                }
 
-            // Otherwise return an error
-            return Err(Error::from(err));
-        }
+                return Err(Error::from(err));
+            }
+        };
 
         // try to parse the output data
-        let data = req_res.unwrap().json::<T>().await;
-        if let Ok(d) = data {
-            return Ok(d);
-        }
+        match res.json::<T>().await {
+            Ok(res) => return Ok(res),
+            Err(err) => {
+                if idx < MAX_RETRY - 1 {
+                    sleep(Duration::from_millis(RETRY_LINEAR_SLEEP)).await;
+                    continue
+                }
 
-        if idx < MAX_RETRY - 1 {
-            sleep(Duration::from_millis(RETRY_LINEAR_SLEEP)).await;
-            continue
+                return Err(Error::from(err));
+            }
         }
-
-        // Otherwise return an error
-        return Err(Error::MaxRetry);
     }
 
     Err(Error::MaxRetry)

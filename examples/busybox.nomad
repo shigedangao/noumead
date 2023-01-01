@@ -19,7 +19,7 @@ job "busybox" {
 
         args = [
           "-c",
-          "echo ${word}; sleep 10; echo ${word} lala"
+          "echo ${word}; sleep 1m; echo ${word} lala"
         ]
 
         command = "/bin/sh"

@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use inquire::{Select, Text};
+use inquire::{Select, Text, MultiSelect};
 use crate::error::Error;
 
 // constant
@@ -24,6 +24,28 @@ pub fn select<T: ToString>(args: &[T], question: &str) -> Result<(String, usize)
         .map_err(|_| Error::ScenarioErr(SELECTED_ITEM_NOT_FOUND_ERR.to_string()))?;
 
     Ok((res, idx))
+}
+
+/// Display a list of items where the user can select multiple options
+///
+/// # Arguments
+///
+/// * `args` - &[T]
+/// * `question` - &str
+pub fn multi_select<T: ToString>(args: &[T], question: &str) -> Result<(Vec<String>, Vec<usize>), Error> {
+    let items: Vec<String> = args.iter()
+        .map(|arg| arg.to_string())
+        .collect();
+
+    let res = MultiSelect::new(question, items.clone())
+        .prompt()?;
+
+    let indexes: Vec<usize> = res
+        .iter()
+        .filter_map(|v| items.binary_search(v).ok())
+        .collect();
+
+    Ok((res, indexes))
 }
 
 /// Show a prompt from multiple options the user need may (or not) answer

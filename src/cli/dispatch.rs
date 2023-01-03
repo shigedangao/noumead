@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use clap::Args;
-use crossterm::style::Stylize;
 use async_trait::async_trait;
 use crate::{
     inquiry,
+    log::Logger,
     error::Error
 };
 use crate::nomad::{self, job::Job};
@@ -51,6 +51,8 @@ impl Run for DispatchArgs {
 
         // dispatch the job
         let dispatch_res = job.dispatch_job(&cli.rest_handler, required_value).await?;
+        Logger::info(&format!("Job with id: {} has been dispatched", dispatch_res.dispatch_id));
+
         // follow the log of the job dispatch
         if self.follow {
             let alloc = nomad::alloc::Allocation::fetch_single_alloc(&dispatch_res.dispatch_id, &cli.rest_handler).await?;
@@ -60,13 +62,9 @@ impl Run for DispatchArgs {
             let (selected_task, _) = inquiry::select(&tasks_name, "Select the task to log")?;
             // get the logs for the targeted allocations
             alloc.get_allocation_logs(&selected_task, &cli.rest_handler).await?;
-
-            println!("{}", "Dispatching done".green());
-
-            return Ok(());
         }
 
-        println!("{}", "Dispatching done".green());
+        Logger::info("Job has been dispatched");
 
         Ok(())
     }

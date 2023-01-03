@@ -3,10 +3,12 @@ use serde::Deserialize;
 use futures::future;
 use tokio::time::{Duration, sleep};
 use crate::{error::Error, rest::RestHandler};
+use crate::log::Logger;
 use super::stream;
 
 // Constant
 const SLEEP: u64 = 100;
+const ALLOCATION_MAX_RETRY: usize = 5;
 const MISSING_ALLOCATION: &str = "Unable to found an allocation for the given dispatch";
 
 #[derive(Debug, Deserialize)]
@@ -28,17 +30,27 @@ pub struct TaskState {
 }
 
 impl Allocation {
-    /// Fetch the information about the allocations
+    /// Try to fetch the allocations with a maximum number of retry
     ///
     /// # Arguments
     ///
     /// * `job_id` - &str
-    /// * `rest_handler` - &RestHandler
+    /// * `rest_handler` - &rest_handler
     pub async fn fetch(job_id: &str, rest_handler: &RestHandler) -> Result<Vec<Allocation>, Error> {
-        let endpoint = format!("v1/job/{}/allocations", job_id);
-        let allocs: Vec<Allocation> = rest_handler.get(&endpoint).await?;
+        for idx in 1..ALLOCATION_MAX_RETRY {
+            let endpoint = format!("v1/job/{}/allocations", job_id);
+            let allocs: Vec<Allocation> = rest_handler.get(&endpoint).await?;
 
-        Ok(allocs)
+            if !allocs.is_empty() {
+                return Ok(allocs);
+            }
+
+            // otherwise pause for a bit
+            Logger::warn(format!("Retry to get the allocation for the {idx}"));
+            sleep(Duration::from_millis(SLEEP)).await;
+        }
+
+        Err(Error::MaxRetry)
     }
 
     /// Fetch a single allocation
@@ -67,11 +79,14 @@ impl Allocation {
         let mut stdout_offset = 0;
         let mut stderr_offset = 0;
 
+        let mut prev_stdout_offset = -1;
+        let mut prev_stderr_offset = -1;
+
         loop {
             // fetch the logs
             let offsets = future::join_all(vec![
-                stream::stream_dispatch_job_log(rest_handler, &self.alloc_id, task_name, stream::StdKind::Stdout, stdout_offset),
-                stream::stream_dispatch_job_log(rest_handler, &self.alloc_id, task_name, stream::StdKind::Stderr, stderr_offset)
+                stream::stream_dispatch_job_log(rest_handler, &self.alloc_id, task_name, stream::StdKind::Stdout, stdout_offset, &mut prev_stdout_offset),
+                stream::stream_dispatch_job_log(rest_handler, &self.alloc_id, task_name, stream::StdKind::Stderr, stderr_offset, &mut prev_stderr_offset)
             ]).await;
 
             for (idx, items) in offsets.into_iter().enumerate() {

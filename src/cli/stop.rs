@@ -1,9 +1,8 @@
 use clap::Args;
 use async_trait::async_trait;
 use futures::future::join_all;
-use crossterm::style::Stylize;
 use crate::nomad::job::{self, Job};
-use crate::inquiry;
+use crate::{inquiry, log::Logger};
 use crate::error::Error;
 use super::Run;
 
@@ -32,18 +31,16 @@ impl Run for StopArgs {
             .filter(|j| selected_jobs_name.contains(&j.name))
             .collect();
 
-        // fetch the allocations available for a job
         let mut tasks = Vec::new();
         for job in selected_jobs {
-            let endpoint = format!("v1/job/{}", job.id);
-            tasks.push(cli.rest_handler.delete(endpoint));
+            tasks.push(cli.rest_handler.delete(format!("v1/job/{}", job.id)));
         }
 
         let res = join_all(tasks).await;
         for r in res {
             match r {
-                Ok(_) => println!("{}", "A job has been deleted".green()),
-                Err(err) => println!("{}{}", "Unable to delete a job due to".red(), err)
+                Ok(_) => Logger::info("A job has been deleted"),
+                Err(err) => Logger::error( "Unable to delete a job due to", err)
             }
         }
 

@@ -1,9 +1,7 @@
-use std::io::stdout;
-use crossterm::execute;
-use crossterm::style::{Color, SetForegroundColor, Print};
 use serde::Deserialize;
 use crate::error::Error;
 use crate::helper::Base64;
+use crate::log::Logger;
 use crate::rest::RestHandler;
 
 pub enum StdKind {
@@ -38,11 +36,12 @@ pub async fn stream_dispatch_job_log(
     id: &str,
     task_name: &str,
     std_kind: StdKind,
-    offset: i64
+    offset: i64,
+    prev_offset: &mut i64
 ) -> Result<i64, Error> {
-    let (std_kind_str, fg_color) = match std_kind {
-        StdKind::Stdout => ("stdout", Color::Blue),
-        StdKind::Stderr => ("stderr", Color::Red)
+    let std_kind_str = match std_kind {
+        StdKind::Stdout => "stdout",
+        StdKind::Stderr => "stderr"
     };
 
     let endpoint = format!("v1/client/fs/logs/{id}?task={task_name}&type={std_kind_str}&offset={offset}");
@@ -52,19 +51,20 @@ pub async fn stream_dispatch_job_log(
         return Ok(0);
     };
 
+    let res_offset = res.offset.unwrap_or(0);
     if let Some(data) = res.data {
         let content = String::from_base64(data)
             .map_err(|err| Error::ScenarioErr(err.to_string()))?;
 
-        execute!(
-            stdout(),
-            SetForegroundColor(fg_color),
-            Print(content),
-        ).map_err(|err| Error::ScenarioErr(err.to_string()))?;
+        if prev_offset != &res_offset {
+            match std_kind {
+                StdKind::Stdout => Logger::notice(content),
+                StdKind::Stderr => Logger::error("", content)
+            }
+
+            *prev_offset = res_offset;
+        }
     }
 
-    match res.offset {
-        Some(of) => Ok(of),
-        None => Ok(0)
-    }
+    Ok(res_offset)
 }

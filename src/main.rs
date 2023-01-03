@@ -4,6 +4,7 @@ mod error;
 mod rest;
 mod inquiry;
 mod helper;
+mod log;
 
 use crossterm::style::Stylize;
 use crate::cli::Cli;

@@ -1,16 +1,11 @@
 use std::collections::HashMap;
 use clap::Args;
 use async_trait::async_trait;
-use crate::{
-    inquiry,
-    log::Logger,
-    error::Error
-};
+use crate::inquiry;
+use crate::log::Logger;
+use crate::error::{Error, self};
 use crate::nomad::{self, job::Job};
 use super::Run;
-
-// constant
-const SELECTED_JOB_NOT_FOUND: &str = "Unable to found the selected job";
 
 #[derive(Args, Debug)]
 pub struct DispatchArgs {
@@ -31,7 +26,7 @@ impl Run for DispatchArgs {
         let (_, idx) = inquiry::select(&jobs, "Select the job that you want to dispatch")?;
 
         let Some(job) = jobs.get(idx) else {
-            return Err(Error::ScenarioErr(SELECTED_JOB_NOT_FOUND.to_string()));
+            return Err(Error::ScenarioErr(error::SELECTED_JOB_NOT_FOUND_ERR.to_string()));
         };
 
         let (required, optionals) = job.get_job_meta(&cli.rest_handler).await?;

@@ -1,6 +1,15 @@
 use std::env::VarError;
-
 use inquire::InquireError;
+
+// Error constant for scenario error
+pub const SELECTED_JOB_NOT_FOUND_ERR: &str = "Unable to found the selected job";
+pub const NO_RUNNING_JOB_ERR: &str = "No running job has been found";
+pub const MISSING_ALLOCATION_ERR: &str = "Unable to found an allocation for the given dispatch";
+pub const JOBS_NOT_FOUND_ERR: &str = "No jobs with parameterized options has been founded";
+pub const SELECTED_ITEM_NOT_FOUND_ERR: &str = "Unable to found the selected item";
+pub const MISSING_REQUIRED_FIELD_ERR: &str = "You must fill this field as the value is required";
+pub const REQ_BUILD_FAIL_ERR: &str = "Failed to build request";
+pub const MISSING_BASE_URL_ERR: &str = "Failed to get the url of the nomad server";
 
 #[derive(Debug)]
 pub enum Error {

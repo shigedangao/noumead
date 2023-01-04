@@ -9,7 +9,6 @@ pub(crate) struct DispatchPayload {
     pub metas: HashMap<String, String>
 }
 
-
 #[derive(Debug, Deserialize)]
 pub struct DispatchRes {
     #[serde(rename(deserialize = "EvalID"))]

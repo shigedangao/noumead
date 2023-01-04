@@ -3,12 +3,11 @@ use async_trait::async_trait;
 use futures::future::join_all;
 use crate::nomad::job::{self, Job};
 use crate::{inquiry, log::Logger};
-use crate::error::Error;
+use crate::error::{Error, self};
 use super::Run;
 
 // constant
 const RUNNING_STATUS: &str = "running";
-const NO_RUNNING_JOB_ERR: &str = "No running job has been founded";
 
 #[derive(Args, Debug)]
 pub struct StopArgs;
@@ -22,7 +21,7 @@ impl Run for StopArgs {
             .collect();
 
         if jobs.is_empty() {
-            return Err(Error::ScenarioErr(NO_RUNNING_JOB_ERR.to_string()));
+            return Err(Error::ScenarioErr(error::NO_RUNNING_JOB_ERR.to_string()));
         }
 
         let (selected_jobs_name, _) = inquiry::multi_select(&jobs, "Select the jobs that you want to stop")?;

@@ -1,13 +1,11 @@
 use reqwest::{Client, RequestBuilder};
 use tokio::time::{sleep, Duration};
 use serde::{de::DeserializeOwned, Serialize};
-use crate::error::Error;
+use crate::error::{Error, self};
 
 // Constant
 const RETRY_LINEAR_SLEEP: u64 = 1000;
 const MAX_RETRY: usize = 8;
-const REQ_BUILD_FAIL_ERR: &str = "Failed to build request";
-const MISSING_BASE_URL_ERR: &str = "Failed to get the url of the nomad server";
 
 #[derive(Debug, Default)]
 pub struct RestHandler {
@@ -24,7 +22,7 @@ impl RestHandler {
     /// * `token` - Option<String>
     pub fn new(base_url: Option<String>, token: Option<String>) -> Result<RestHandler, Error> {
         let Some(url) = base_url else {
-            return Err(Error::MissingEnv(MISSING_BASE_URL_ERR.to_string()))
+            return Err(Error::MissingEnv(error::MISSING_BASE_URL_ERR.to_string()))
         };
 
         Ok(RestHandler {
@@ -38,8 +36,12 @@ impl RestHandler {
     /// # Arguments
     ///
     /// * `&self` - RestHandler
-    /// * `endpoint` - &str
-    pub async fn get<T: DeserializeOwned>(&self, endpoint: &str) -> Result<T, Error> {
+    /// * `endpoint` - S
+    pub async fn get<T, S>(&self, endpoint: S) -> Result<T, Error>
+        where
+            T: DeserializeOwned,
+            S: AsRef<str> + std::fmt::Display
+    {
         let client = Client::new();
         let url = format!("{}/{}", self.base_url, endpoint);
 
@@ -81,9 +83,14 @@ impl RestHandler {
     /// # Arguments
     ///
     /// * `&self` - RestHandler
-    /// * `endpoint` - &str
+    /// * `endpoint` - S
     /// * `payload` - T
-    pub async fn post<T: Serialize, O: DeserializeOwned>(&self, endpoint: &str, payload: T) -> Result<O, Error> {
+    pub async fn post<T, O, S>(&self, endpoint: S, payload: T) -> Result<O, Error>
+        where
+            T: Serialize,
+            O: DeserializeOwned,
+            S: AsRef<str> + std::fmt::Display
+    {
         let client = Client::new();
         let url = format!("{}/{}", self.base_url, endpoint);
 
@@ -119,7 +126,7 @@ impl RestHandler {
 async fn retry<T: DeserializeOwned>(req: RequestBuilder, max_retry: usize) -> Result<T, Error> {
     for idx in 1..max_retry {
         let Some(req) = req.try_clone() else {
-            return Err(Error::NomadReqErr(REQ_BUILD_FAIL_ERR.to_string()));
+            return Err(Error::NomadReqErr(error::REQ_BUILD_FAIL_ERR.to_string()));
         };
 
         let res = match req.send().await {

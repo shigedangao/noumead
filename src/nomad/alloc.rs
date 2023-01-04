@@ -2,14 +2,14 @@ use std::collections::HashMap;
 use serde::Deserialize;
 use futures::future;
 use tokio::time::{Duration, sleep};
-use crate::{error::Error, rest::RestHandler};
+use crate::error::{Error, self};
+use crate::rest::RestHandler;
 use crate::log::Logger;
 use super::stream;
 
 // Constant
 const SLEEP: u64 = 100;
 const ALLOCATION_MAX_RETRY: usize = 5;
-const MISSING_ALLOCATION: &str = "Unable to found an allocation for the given dispatch";
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Allocation {
@@ -62,7 +62,7 @@ impl Allocation {
     pub async fn fetch_single_alloc(job_id: &str, rest_handler: &RestHandler) -> Result<Allocation, Error> {
         let mut allocs = Allocation::fetch(job_id, rest_handler).await?;
         let Some(alloc) = allocs.pop() else {
-            return Err(Error::ScenarioErr(MISSING_ALLOCATION.to_string()));
+            return Err(Error::ScenarioErr(error::MISSING_ALLOCATION_ERR.to_string()));
         };
 
         Ok(alloc)

@@ -1,10 +1,6 @@
 use std::collections::HashMap;
 use inquire::{Select, Text, MultiSelect};
-use crate::error::Error;
-
-// constant
-const SELECTED_ITEM_NOT_FOUND_ERR: &str = "Unable to found the selected item";
-const MISSING_REQUIRED_FIELD_ERR: &str = "You must fill this field as the value is required";
+use crate::error::{Error, self};
 
 /// Display a list of items to the user
 ///
@@ -21,7 +17,7 @@ pub fn select<T: ToString>(args: &[T], question: &str) -> Result<(String, usize)
         .prompt()?;
 
     let idx = items.binary_search(&res)
-        .map_err(|_| Error::ScenarioErr(SELECTED_ITEM_NOT_FOUND_ERR.to_string()))?;
+        .map_err(|_| Error::ScenarioErr(error::SELECTED_ITEM_NOT_FOUND_ERR.to_string()))?;
 
     Ok((res, idx))
 }
@@ -62,7 +58,7 @@ pub fn prompt_vector(items: Vec<String>, msg: &str, required: bool) -> Result<Ha
             .prompt()?;
 
         if answer.is_empty() && required {
-            return Err(Error::ScenarioErr(MISSING_REQUIRED_FIELD_ERR.to_string()))
+            return Err(Error::ScenarioErr(error::MISSING_REQUIRED_FIELD_ERR.to_string()))
         }
 
         map.insert(item, answer);

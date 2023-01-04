@@ -47,7 +47,7 @@ pub async fn stream_dispatch_job_log(
     let endpoint = format!("v1/client/fs/logs/{id}?task={task_name}&type={std_kind_str}&offset={offset}");
     // /!\ If nomad returns nothing this could cause reqwest to thrown an error as it could not
     //     deserialize the result. As a result we skip the error altogether.
-    let Ok(res) = req.get::<StreamLog>(&endpoint).await else {
+    let Ok(res) = req.get::<StreamLog, _>(&endpoint).await else {
         return Ok(0);
     };
 

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use serde::Deserialize;
-use crate::error::Error;
+use crate::error::{Error, self};
 use crate::helper::{to_json, Base64};
 use crate::rest::RestHandler;
 use super::spec::Spec;
@@ -8,7 +8,6 @@ use super::dispatch::{DispatchRes, DispatchPayload};
 
 // Constant
 const JOB_ENDPOINT: &str = "v1/jobs";
-const JOBS_NOT_FOUND_ERR: &str = "No jobs with parameterized options has been founded";
 
 #[derive(Debug, Deserialize, Default)]
 pub struct Job {
@@ -74,13 +73,13 @@ impl ToString for Job {
 /// * `handler` - &RestHandler
 pub async fn get_nomad_job_list(handler: &RestHandler) -> Result<Vec<Job>, Error> {
     let endpoint = format!("{}?meta=true&namespace=*", JOB_ENDPOINT);
-    let jobs: Vec<Job> = handler.get::<Vec<Job>>(&endpoint)
+    let jobs: Vec<Job> = handler.get::<Vec<Job>, _>(&endpoint)
         .await?
         .into_iter()
         .collect();
 
     if jobs.is_empty() {
-        return Err(Error::ScenarioErr(JOBS_NOT_FOUND_ERR.to_string()));
+        return Err(Error::ScenarioErr(error::JOBS_NOT_FOUND_ERR.to_string()));
     }
 
     Ok(jobs)

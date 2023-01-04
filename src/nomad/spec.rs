@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use crate::{error::Error, rest::RestHandler};
 
+// Constant
 const SPEC_ENDPOINT: &str = "v1/job";
 
 #[derive(Debug, Deserialize)]
@@ -28,7 +29,7 @@ impl Spec {
     /// * `handler` - &RestHandler
     pub async fn get(name: &str, handler: &RestHandler) -> Result<Spec, Error> {
         let endpoint = format!("{}/{}", SPEC_ENDPOINT, name);
-        let spec = handler.get::<Spec>(&endpoint).await?;
+        let spec = handler.get::<Spec, _>(&endpoint).await?;
 
         Ok(spec)
     }

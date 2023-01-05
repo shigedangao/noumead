@@ -18,7 +18,7 @@ impl Logger {
     ///
     /// * `msg` - &str
     pub fn warn<T: ToString>(msg: T) {
-        println!("⚠️ {}", msg.to_string().yellow());
+        println!("⚠️  {}", msg.to_string().yellow());
     }
 
 
@@ -38,6 +38,6 @@ impl Logger {
     /// * `msg` - &str
     /// * `highlight` - &str
     pub fn error<T: ToString>(msg: &str, highlight: T) {
-        println!("❌ {}{}", msg.red(), highlight.to_string().bold());
+        println!("❌ {} {}", msg.red(), highlight.to_string().bold());
     }
 }

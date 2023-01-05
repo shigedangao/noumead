@@ -9,6 +9,7 @@ use super::stream;
 
 // Constant
 const SLEEP: u64 = 100;
+const ALLOC_RETRY_SLEEP: u64 = 1000;
 const ALLOCATION_MAX_RETRY: usize = 5;
 
 #[derive(Debug, Deserialize)]
@@ -47,7 +48,7 @@ impl Allocation {
 
             // otherwise pause for a bit
             Logger::warn(format!("Retry to get the allocation for the {idx}"));
-            sleep(Duration::from_millis(SLEEP)).await;
+            sleep(Duration::from_millis(ALLOC_RETRY_SLEEP)).await;
         }
 
         Err(Error::MaxRetry)

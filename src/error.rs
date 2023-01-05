@@ -10,6 +10,7 @@ pub const SELECTED_ITEM_NOT_FOUND_ERR: &str = "Unable to found the selected item
 pub const MISSING_REQUIRED_FIELD_ERR: &str = "You must fill this field as the value is required";
 pub const REQ_BUILD_FAIL_ERR: &str = "Failed to build request";
 pub const MISSING_BASE_URL_ERR: &str = "Failed to get the url of the nomad server";
+pub const REQ_BUILD_ERR: &str = "Unable to build the client for sending request to nomad";
 
 #[derive(Debug)]
 pub enum Error {

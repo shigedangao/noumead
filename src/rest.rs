@@ -10,7 +10,8 @@ const MAX_RETRY: usize = 8;
 #[derive(Debug, Default)]
 pub struct RestHandler {
     base_url: String,
-    token: Option<String>
+    token: Option<String>,
+    client: Option<Client>,
 }
 
 impl RestHandler {
@@ -25,9 +26,14 @@ impl RestHandler {
             return Err(Error::MissingEnv(error::MISSING_BASE_URL_ERR.to_string()))
         };
 
+        let client = Client::builder()
+            .danger_accept_invalid_certs(true)
+            .build()?;
+
         Ok(RestHandler {
             base_url: url,
-            token
+            token,
+            client: Some(client)
         })
     }
 
@@ -42,7 +48,10 @@ impl RestHandler {
             T: DeserializeOwned,
             S: AsRef<str> + std::fmt::Display
     {
-        let client = Client::new();
+        let Some(client) = self.client.as_ref() else {
+            return Err(Error::NomadReqErr(error::REQ_BUILD_ERR.to_string()))
+        };
+
         let url = format!("{}/{}", self.base_url, endpoint);
 
         let mut req = client.get(url);
@@ -65,7 +74,10 @@ impl RestHandler {
         where
             S: AsRef<str> + std::fmt::Display
     {
-        let client = Client::new();
+        let Some(client) = self.client.as_ref() else {
+            return Err(Error::NomadReqErr(error::REQ_BUILD_ERR.to_string()))
+        };
+
         let url = format!("{}/{}", self.base_url, endpoint);
 
         let mut req = client.delete(url);
@@ -91,7 +103,10 @@ impl RestHandler {
             O: DeserializeOwned,
             S: AsRef<str> + std::fmt::Display
     {
-        let client = Client::new();
+        let Some(client) = self.client.as_ref() else {
+            return Err(Error::NomadReqErr(error::REQ_BUILD_ERR.to_string()))
+        };
+
         let url = format!("{}/{}", self.base_url, endpoint);
 
         let mut req = client.post(url);

@@ -1,24 +1,24 @@
 <p align="center">
   <img src="./logo.webp" width="200px"/>
-  <p align="center"><b>N o u m e a d</b></p>
+  <p align="center"><b>N o u m e a d 🏝️</b></p>
 </p>
 
 I always forget the number of arguments to pass to a Nomad parameterized job. This CLI allow to dispatch a parameterized job to Nomad and follow the log of the dispatched parameterized job.
 
 ## Usage
 
-For the time being, no release has been done. In order to run the CLI please clone this repo and run one of the following command. By default Noumead will look for the `NOMAD_ADDR` & `NOMAD_TOKEN` environment variable
+In order to run the CLI please clone this repo and run one of the following command. By default Noumead will look for the `NOMAD_ADDR` & `NOMAD_TOKEN` environment variable
 
 ### Only dispatch
 
 ```sh
-cargo run -- dispatch
+noumead dispatch
 ```
 
 ### Dispatch and follow
 
 ```sh
-cargo run -- dispatch --follow
+noumead dispatch --follow
 ```
 
 ### Passing var
@@ -26,7 +26,7 @@ cargo run -- dispatch --follow
 You can pass the nomad server address & token with this command
 
 ```sh
-cargo run -- --nomad-url="<url>" --token="<token>" dispatch --follow
+noumead --nomad-url="<url>" --token="<token>" dispatch --follow
 ```
 
 ### Example
@@ -48,5 +48,5 @@ Dispatching done
 Sometimes I also dispatch jobs with wrong parameters. As such it's also handy to delete multiple job with a single command line
 
 ```sh
-cargo run -- --nomad-url="http://127.0.0.1:4646" stop
+noumead --nomad-url="http://127.0.0.1:4646" stop
 ```

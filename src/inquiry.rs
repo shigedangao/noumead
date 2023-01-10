@@ -3,7 +3,7 @@ use inquire::{Select, Text, MultiSelect};
 use crate::error::{Error, self};
 
 // constant
-const MULTI_SELECT_PAGE_SIZE: usize = 20;
+const SELECT_PAGE_SIZE: usize = 20;
 
 /// Display a list of items to the user
 ///
@@ -17,6 +17,7 @@ pub fn select<T: ToString>(args: &[T], question: &str) -> Result<(String, usize)
         .collect();
 
     let res = Select::new(question, items.clone())
+        .with_page_size(SELECT_PAGE_SIZE)
         .prompt()?;
 
     let idx = items.binary_search(&res)
@@ -37,7 +38,7 @@ pub fn multi_select<T: ToString>(args: &[T], question: &str) -> Result<(Vec<Stri
         .collect();
 
     let res = MultiSelect::new(question, items.clone())
-        .with_page_size(MULTI_SELECT_PAGE_SIZE)
+        .with_page_size(SELECT_PAGE_SIZE)
         .prompt()?;
 
     let indexes: Vec<usize> = res
